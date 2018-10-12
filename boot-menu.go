@@ -2,6 +2,7 @@ package main
 
 import (
 	tt "github.com/electricface/grub-theme-viewer/themetxt"
+	"strings"
 
 	"github.com/fogleman/gg"
 )
@@ -31,6 +32,9 @@ var menuItems = []*menuItem{
 type BootMenu struct {
 	CompCommon
 
+	visible bool
+	menuPixmapStyle string
+
 	itemFont                string
 	itemColor               string
 	itemPixmapStyle         string
@@ -45,36 +49,35 @@ type BootMenu struct {
 	iconWidth     tt.Length
 	iconHeight    tt.Length
 	itemIconSpace tt.Length
-}
 
-func getLengthExprHorizontal(l tt.Length, n *Node) Expr {
-	return getLengthExpr(l, n.getWidth())
-}
-
-func getLengthExprVertical(l tt.Length, n *Node) Expr {
-	return getLengthExpr(l, n.getHeight())
+	scrollbar bool
+	scrollbarWidth tt.Length
+	scrollbarFrame string
+	scrollbarThumb string
 }
 
 func (bm *BootMenu) getItemHeight() Expr {
-	return getLengthExprVertical(bm.itemHeight, bm.node)
+	return AbsNum(bm.itemHeight.(tt.AbsNum))
 }
+
 func (bm *BootMenu) getItemPadding() Expr {
-	return getLengthExprVertical(bm.itemPadding, bm.node)
+	return AbsNum(bm.itemPadding.(tt.AbsNum))
 }
+
 func (bm *BootMenu) getItemSpacing() Expr {
-	return getLengthExprVertical(bm.itemSpacing, bm.node)
+	return AbsNum(bm.itemSpacing.(tt.AbsNum))
 }
 
 func (bm *BootMenu) getIconWidth() Expr {
-	return getLengthExprHorizontal(bm.iconWidth, bm.node)
+	return AbsNum(bm.iconWidth.(tt.AbsNum))
 }
 
 func (bm *BootMenu) getIconHeight() Expr {
-	return getLengthExprVertical(bm.iconHeight, bm.node)
+	return AbsNum(bm.iconHeight.(tt.AbsNum))
 }
 
 func (bm *BootMenu) getItemIconSpace() Expr {
-	return getLengthExprHorizontal(bm.itemIconSpace, bm.node)
+	return AbsNum(bm.itemIconSpace.(tt.AbsNum))
 }
 
 func (cc *CompCommon) fillCommonOptions(comp *tt.Component) {
@@ -112,6 +115,36 @@ func newBootMenu(comp *tt.Component, parent *Node) *BootMenu {
 
 	bm.fillCommonOptions(comp)
 	var ok bool
+	bm.visible, ok = comp.GetPropBool("visible")
+	if !ok {
+		bm.visible = true
+	}
+
+	bm.menuPixmapStyle, _ = comp.GetPropString("menu_pixmap_style")
+
+	bm.itemFont, ok = comp.GetPropString("item_font")
+	if !ok {
+		bm.itemFont = "Unknown Regular 16"
+	}
+
+	bm.itemColor, ok = comp.GetPropString("item_color")
+	if !ok {
+		bm.itemColor = "black"
+	}
+
+	bm.itemPixmapStyle, _ = comp.GetPropString("item_pixmap_style")
+
+	bm.selectedItemFont, ok = comp.GetPropString("selected_item_font")
+	if !ok {
+		bm.selectedItemFont = bm.itemFont
+	}
+
+	bm.selectedItemColor, ok = comp.GetPropString("selected_item_color")
+	if !ok {
+		bm.selectedItemColor = bm.itemColor
+	}
+
+	bm.selectedItemPixmapStyle, _ = comp.GetPropString("selected_item_pixmap_style")
 
 	bm.itemHeight, ok = comp.GetPropLength("item_height")
 	if !ok {
@@ -144,6 +177,19 @@ func newBootMenu(comp *tt.Component, parent *Node) *BootMenu {
 		bm.itemIconSpace = tt.AbsNum(4)
 	}
 
+	bm.scrollbar, ok = comp.GetPropBool("scrollbar")
+	if !ok {
+		bm.scrollbar = true
+	}
+
+	bm.scrollbarWidth, ok = comp.GetPropLength("scrollbar_width")
+	if !ok {
+		bm.scrollbarWidth = tt.AbsNum(16)
+	}
+
+	bm.scrollbarFrame, _ = comp.GetPropString("scrollbar_frame")
+	bm.scrollbarThumb, _ = comp.GetPropString("scrollbar_thumb")
+
 	return bm
 }
 
@@ -154,10 +200,9 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 
 	y := bm.getItemPadding()
 
-	//itemWidth := bmNode.getWidth() - (2 * float64(itemPadding)) - 2
-	itemWidthExpr := sub(bmNode.getWidth(),
-		mul(AbsNum(2), bm.getItemPadding()))
-	itemWidthExpr = sub(itemWidthExpr, AbsNum(2))
+	// itemWidth = bootMenu.width - (2 * itemPadding) - 2
+	itemWidthExpr := sub(sub(bmNode.getWidth(),
+		mul(AbsNum(2), bm.getItemPadding())), AbsNum(2))
 
 	for i := 0; i < 4; i++ {
 		// add item
@@ -168,7 +213,20 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 			height:    bm.itemHeight,
 		}
 
-		//iconTop := float64(itemHeight-iconHeight) / 2
+		// select first item
+		if i == 0 {
+			item.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
+				c := getPixmapName(bm.selectedItemPixmapStyle, styleBoxCenter)
+				n.drawImage(ctx, ec, c)
+			}
+		} else {
+			item.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
+				c := getPixmapName(bm.itemPixmapStyle, styleBoxCenter)
+				n.drawImage(ctx, ec, c)
+			}
+		}
+
+		// iconTop = (itemHeight-iconHeight) / 2
 		iconTopExpr := div(sub(bm.getItemHeight(), bm.getIconHeight()), AbsNum(2))
 
 		icon := &Node{
@@ -184,10 +242,10 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 			n.drawImage(ctx, ec, "icons/"+iconName+".png")
 		}
 
-		//textTop := float64(itemHeight-textFontSize) / 2
+		// textTop = (itemHeight-textFontSize) / 2
 		textTopExpr := div(sub(bm.getItemHeight(), AbsNum(textFontSize)), AbsNum(2))
 
-		//textWidth = tt.AbsNum(int(itemWidth) - iconWidth - itemIconSpace),
+		// textWidth = itemWidth - iconWidth - itemIconSpace
 		textWidthExpr := sub(sub(itemWidthExpr, bm.getIconWidth()),
 			bm.getItemIconSpace())
 
@@ -207,11 +265,54 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 		item.addChild(icon)
 		item.addChild(text)
 
-		//y += itemHeight + itemSpacing
+		// y += itemHeight + itemSpacing
 		y = add(y, add(bm.getItemHeight(), bm.getItemSpacing()))
 
 		bmNode.addChild(item)
 
 	}
+
+	bmNode.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
+		c := getPixmapName(bm.menuPixmapStyle, styleBoxCenter)
+		n.drawImage(ctx, ec, c)
+	}
+
 	return bmNode
+}
+
+const (
+	styleBoxNorthwest = iota
+	styleBoxNorth
+	styleBoxNortheast
+	styleBoxWest
+	styleBoxCenter
+	styleBoxEast
+	styleBoxSouthwest
+	styleBoxSouth
+	styleBoxSoutheast
+)
+
+func getPixmapName(name string, part int) string {
+	var partStr string
+	switch part {
+	case styleBoxNorthwest:
+		partStr = "nw"
+	case styleBoxNorth:
+		partStr = "n"
+	case styleBoxNortheast:
+		partStr = "ne"
+	case styleBoxWest:
+		partStr = "w"
+	case styleBoxCenter:
+		partStr = "c"
+	case styleBoxEast:
+		partStr = "e"
+	case styleBoxSouthwest:
+		partStr = "sw"
+	case styleBoxSouth:
+		partStr = "s"
+	case styleBoxSoutheast:
+		partStr = "se"
+	}
+	return strings.Replace(name, "*", partStr, 1)
 }

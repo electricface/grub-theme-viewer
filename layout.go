@@ -24,15 +24,6 @@ type Node struct {
 	draw func(n *Node, ctx *gg.Context, ec *EvalContext)
 }
 
-func newRootNode(w, h int) *Node {
-	return &Node{
-		left:   tt.AbsNum(0),
-		top:    tt.AbsNum(0),
-		width:  tt.AbsNum(w),
-		height: tt.AbsNum(h),
-	}
-}
-
 func getLengthExpr(l tt.Length, val Expr) Expr {
 	switch ll := l.(type) {
 	case tt.AbsNum:
@@ -143,13 +134,15 @@ func (n *Node) drawText(ctx *gg.Context, ec *EvalContext, str string) {
 }
 
 func (n *Node) DrawTo(ctx *gg.Context, ec *EvalContext) {
-	x := n.getLeft().Eval(ec)
-	y := n.getTop().Eval(ec)
-	w := n.getWidth().Eval(ec)
-	h := n.getHeight().Eval(ec)
-	ctx.DrawRectangle(x, y, w, h)
-	ctx.SetRGB(1, 0, 0)
-	ctx.Stroke()
+	if optDrawOutline {
+		x := n.getLeft().Eval(ec)
+		y := n.getTop().Eval(ec)
+		w := n.getWidth().Eval(ec)
+		h := n.getHeight().Eval(ec)
+		ctx.DrawRectangle(x, y, w, h)
+		ctx.SetRGB(1, 0, 0)
+		ctx.Stroke()
+	}
 
 	if n.draw != nil {
 		n.draw(n, ctx, ec)

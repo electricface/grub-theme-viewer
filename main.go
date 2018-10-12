@@ -14,6 +14,7 @@ import (
 var optThemeFile string
 var optDraw bool
 var optDump bool
+var optDrawOutline bool
 
 var optScreenWidth int
 var optScreenHeight int
@@ -24,6 +25,7 @@ func init() {
 	flag.StringVar(&optThemeFile, "theme", "", "theme file")
 	flag.BoolVar(&optDraw, "draw", false, "draw out.png")
 	flag.BoolVar(&optDump, "dump", false, "dump theme")
+	flag.BoolVar(&optDrawOutline, "outline", false, "draw outline")
 
 	flag.IntVar(&optScreenWidth, "width", 1366, "screen width (px)")
 	flag.IntVar(&optScreenHeight, "height", 768, "screen height (px)")
@@ -34,7 +36,7 @@ func testMain() {
 	ec.setUnknown("screen-width", 500)
 	ec.setUnknown("screen-height", 600)
 
-	root := newRootNode(500, 600)
+	root := &Node{}
 	dc := gg.NewContext(500, 600)
 
 	c1 := &Node{
@@ -81,12 +83,6 @@ func main() {
 }
 
 func draw(theme *tt.Theme) {
-
-	//screenWidth := 1366
-	//screenHeight := 768
-	//screenWidth = 3000
-	//screenHeight = 2000
-
 	ec := newEvalContent()
 	ec.setUnknown("screen-width", float64(optScreenWidth))
 	ec.setUnknown("screen-height", float64(optScreenHeight))
@@ -116,7 +112,7 @@ func getResourceFile(name string) string {
 }
 
 func themeToNodeTree(theme *tt.Theme, w, h int) *Node {
-	root := newRootNode(w, h)
+	root :=&Node{}
 	for _, comp := range theme.Components {
 		if comp.Id == "boot_menu" {
 			root.addChild(compBootMenuToNode(comp, root))
