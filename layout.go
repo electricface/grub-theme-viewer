@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	tt "github.com/electricface/grub-theme-viewer/themetxt"
 
 	"github.com/fogleman/gg"
@@ -124,6 +126,165 @@ func (n *Node) drawImage(ctx *gg.Context, ec *EvalContext, name string) error {
 	img = resize.Resize(uint(width), uint(height), img, resize.Lanczos3)
 	ctx.DrawImage(img, int(x), int(y))
 	return nil
+}
+
+func (n *Node) drawStyleBox(ctx *gg.Context, ec *EvalContext, name string) {
+	if name == "" {
+		return
+	}
+
+	x := int(n.getLeft().Eval(ec))
+	y := int(n.getTop().Eval(ec))
+	width := int(n.getWidth().Eval(ec))
+	height := int(n.getHeight().Eval(ec))
+
+	color1 := "#f9f806"
+	color2 := "#f97306"
+
+	// nw
+	imgNW, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxNorthwest)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		imgNWWidth := imgNW.Bounds().Dx()
+		imgNWHeight := imgNW.Bounds().Dy()
+		ctx.DrawImage(imgNW, x-imgNWWidth, y-imgNWHeight)
+
+		if optDrawOutline {
+			ctx.SetHexColor(color1)
+			ctx.DrawRectangle(float64(x-imgNWWidth), float64(y-imgNWHeight),
+				float64(imgNWWidth), float64(imgNWHeight))
+			ctx.Stroke()
+		}
+	}
+
+	// n
+	imgN, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxNorth)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		imgNHeight := imgN.Bounds().Dy()
+		imgN = resize.Resize(uint(width), uint(imgNHeight), imgN, resize.Lanczos3)
+		ctx.DrawImage(imgN, x, y-imgNHeight)
+
+		if optDrawOutline {
+			ctx.SetHexColor(color2)
+			ctx.DrawRectangle(float64(x), float64(y-imgNHeight),
+				float64(width), float64(imgNHeight))
+			ctx.Stroke()
+		}
+	}
+
+	// ne
+	imgNE, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxNortheast)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		imgNEWidth := imgNE.Bounds().Dx()
+		imgNEHeight := imgNE.Bounds().Dy()
+		ctx.DrawImage(imgNE, x+width, y-imgNEHeight)
+
+		if optDrawOutline {
+			ctx.SetHexColor(color1)
+			ctx.DrawRectangle(float64(x+width), float64(y-imgNEHeight),
+				float64(imgNEWidth), float64(imgNEHeight))
+			ctx.Stroke()
+		}
+	}
+
+	// w
+	imgW, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxWest)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		imgWWidth := imgW.Bounds().Dx()
+		imgW = resize.Resize(uint(imgWWidth), uint(height), imgW, resize.Lanczos3)
+		ctx.DrawImage(imgW, x-imgWWidth, y)
+
+		if optDrawOutline {
+			ctx.SetHexColor(color2)
+			ctx.DrawRectangle(float64(x-imgWWidth), float64(y),
+				float64(uint(imgWWidth)), float64(uint(height)))
+			ctx.Stroke()
+		}
+	}
+
+	// c
+	imgC, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxCenter)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		imgC = resize.Resize(uint(width), uint(height), imgC, resize.Lanczos3)
+		ctx.DrawImage(imgC, x, y)
+	}
+
+	// e
+	imgE, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxEast)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		imgEWidth := imgE.Bounds().Dx()
+		imgE = resize.Resize(uint(imgEWidth), uint(height), imgE, resize.Lanczos3)
+		ctx.DrawImage(imgE, x+width, y)
+
+		if optDrawOutline {
+			ctx.SetHexColor(color2)
+			ctx.DrawRectangle(float64(x+width), float64(y),
+				float64(uint(imgEWidth)), float64(uint(height)))
+			ctx.Stroke()
+		}
+	}
+
+	// sw
+	imgSW, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxSouthwest)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		imgSWWidth := imgSW.Bounds().Dx()
+		imgSWHeight := imgSW.Bounds().Dy()
+		ctx.DrawImage(imgSW, x-imgSWWidth, y+height)
+
+		if optDrawOutline {
+			ctx.SetHexColor(color1)
+			ctx.DrawRectangle(float64(x-imgSWWidth), float64(y+height),
+				float64(imgSWWidth), float64(imgSWHeight))
+			ctx.Stroke()
+		}
+	}
+
+	// s
+	imgS, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxSouth)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		imgSHeight := imgS.Bounds().Dy()
+		imgS = resize.Resize(uint(width), uint(imgSHeight), imgS, resize.Lanczos3)
+		ctx.DrawImage(imgS, x, y+height)
+
+		if optDrawOutline {
+			ctx.SetHexColor(color2)
+			ctx.DrawRectangle(float64(x), float64(y+height),
+				float64(width), float64(imgSHeight))
+			ctx.Stroke()
+		}
+	}
+
+	// se
+	imgSE, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxSoutheast)))
+	if err != nil {
+		log.Println(err)
+	} else {
+		ctx.DrawImage(imgSE, x+width, y+height)
+
+		if optDrawOutline {
+			imgSEWidth := imgSE.Bounds().Dx()
+			imgSEHeight := imgSE.Bounds().Dy()
+			ctx.SetHexColor(color1)
+			ctx.DrawRectangle(float64(x+width), float64(y+height),
+				float64(imgSEWidth), float64(imgSEHeight))
+			ctx.Stroke()
+		}
+	}
 }
 
 func (n *Node) drawText(ctx *gg.Context, ec *EvalContext, str string) {

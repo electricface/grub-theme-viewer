@@ -1,8 +1,9 @@
 package main
 
 import (
-	tt "github.com/electricface/grub-theme-viewer/themetxt"
 	"strings"
+
+	tt "github.com/electricface/grub-theme-viewer/themetxt"
 
 	"github.com/fogleman/gg"
 )
@@ -32,7 +33,7 @@ var menuItems = []*menuItem{
 type BootMenu struct {
 	CompCommon
 
-	visible bool
+	visible         bool
 	menuPixmapStyle string
 
 	itemFont                string
@@ -50,7 +51,7 @@ type BootMenu struct {
 	iconHeight    tt.Length
 	itemIconSpace tt.Length
 
-	scrollbar bool
+	scrollbar      bool
 	scrollbarWidth tt.Length
 	scrollbarFrame string
 	scrollbarThumb string
@@ -216,13 +217,11 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 		// select first item
 		if i == 0 {
 			item.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
-				c := getPixmapName(bm.selectedItemPixmapStyle, styleBoxCenter)
-				n.drawImage(ctx, ec, c)
+				n.drawStyleBox(ctx, ec, bm.selectedItemPixmapStyle)
 			}
 		} else {
 			item.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
-				c := getPixmapName(bm.itemPixmapStyle, styleBoxCenter)
-				n.drawImage(ctx, ec, c)
+				n.drawStyleBox(ctx, ec, bm.itemPixmapStyle)
 			}
 		}
 
@@ -273,8 +272,7 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 	}
 
 	bmNode.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
-		c := getPixmapName(bm.menuPixmapStyle, styleBoxCenter)
-		n.drawImage(ctx, ec, c)
+		n.drawStyleBox(ctx, ec, bm.menuPixmapStyle)
 	}
 
 	return bmNode
