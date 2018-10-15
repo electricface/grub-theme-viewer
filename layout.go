@@ -1,6 +1,7 @@
 package main
 
 import (
+	"image/color"
 	"log"
 
 	tt "github.com/electricface/grub-theme-viewer/themetxt"
@@ -287,10 +288,10 @@ func (n *Node) drawStyleBox(ctx *gg.Context, ec *EvalContext, name string) {
 	}
 }
 
-func (n *Node) drawText(ctx *gg.Context, ec *EvalContext, str string) {
+func (n *Node) drawText(ctx *gg.Context, ec *EvalContext, str string, color color.Color) {
 	x := n.getLeft().Eval(ec)
 	y := n.getTop().Eval(ec)
-	ctx.SetRGB(1, 0, 0)
+	ctx.SetColor(color)
 	ctx.DrawStringAnchored(str, x, y, 0, 1)
 }
 

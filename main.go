@@ -62,7 +62,6 @@ func testMain() {
 }
 
 func main() {
-	//testMain()
 	flag.Parse()
 
 	globalThemeDir = filepath.Dir(optThemeFile)
@@ -112,7 +111,7 @@ func getResourceFile(name string) string {
 }
 
 func themeToNodeTree(theme *tt.Theme, w, h int) *Node {
-	root :=&Node{}
+	root := &Node{}
 	for _, comp := range theme.Components {
 		if comp.Id == "boot_menu" {
 			root.addChild(compBootMenuToNode(comp, root))

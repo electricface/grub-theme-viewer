@@ -1,6 +1,7 @@
 package main
 
 import (
+	"image/color"
 	"strings"
 
 	tt "github.com/electricface/grub-theme-viewer/themetxt"
@@ -79,6 +80,14 @@ func (bm *BootMenu) getIconHeight() Expr {
 
 func (bm *BootMenu) getItemIconSpace() Expr {
 	return AbsNum(bm.itemIconSpace.(tt.AbsNum))
+}
+
+func (bm *BootMenu) getItemColor() color.Color {
+	return parseColor(bm.itemColor)
+}
+
+func (bm *BootMenu) getSelectedItemColor() color.Color {
+	return parseColor(bm.selectedItemColor)
 }
 
 func (cc *CompCommon) fillCommonOptions(comp *tt.Component) {
@@ -256,9 +265,16 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 			widthExpr: textWidthExpr,
 			height:    tt.AbsNum(textFontSize),
 		}
+
+		var textColor color.Color
+		if i == 0 {
+			textColor = bm.getSelectedItemColor()
+		} else {
+			textColor = bm.getItemColor()
+		}
 		text.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
 			textStr := menuItems[idx].text
-			n.drawText(ctx, ec, textStr)
+			n.drawText(ctx, ec, textStr, textColor)
 		}
 
 		item.addChild(icon)
