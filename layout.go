@@ -288,11 +288,23 @@ func (n *Node) drawStyleBox(ctx *gg.Context, ec *EvalContext, name string) {
 	}
 }
 
-func (n *Node) drawText(ctx *gg.Context, ec *EvalContext, str string, color color.Color) {
+func (n *Node) drawText(ctx *gg.Context, ec *EvalContext, str string, color color.Color, fontSize int) {
 	x := n.getLeft().Eval(ec)
 	y := n.getTop().Eval(ec)
 	ctx.SetColor(color)
+
+	ctx.LoadFontFace(globalFontFile, float64(fontSize))
 	ctx.DrawStringAnchored(str, x, y, 0, 1)
+}
+
+func (n *Node) drawText1(ctx *gg.Context, ec *EvalContext, str string, color color.Color, fontSize int, width float64, align gg.Align) {
+	x := n.getLeft().Eval(ec)
+	y := n.getTop().Eval(ec)
+	ctx.SetColor(color)
+
+	ctx.LoadFontFace(globalFontFile, float64(fontSize))
+	//ctx.DrawStringAnchored(str, x, y, 0, 1)
+	ctx.DrawStringWrapped(str, x, y, 0, 1, width, 0, align)
 }
 
 func (n *Node) DrawTo(ctx *gg.Context, ec *EvalContext) {

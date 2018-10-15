@@ -92,6 +92,8 @@ func (bm *BootMenu) getSelectedItemColor() color.Color {
 
 func (cc *CompCommon) fillCommonOptions(comp *tt.Component) {
 	var ok bool
+	cc.id, _ = comp.GetPropString("id")
+
 	cc.left, ok = comp.GetPropLength("left")
 	if !ok {
 		cc.left = tt.AbsNum(0)
@@ -205,7 +207,6 @@ func newBootMenu(comp *tt.Component, parent *Node) *BootMenu {
 
 func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 	bm := newBootMenu(comp, parent)
-	textFontSize := 32
 	bmNode := bm.node
 
 	y := bm.getItemPadding()
@@ -250,6 +251,16 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 			n.drawImage(ctx, ec, "icons/"+iconName+".png")
 		}
 
+		var textColor color.Color
+		var textFontSize int
+		if i == 0 {
+			textColor = bm.getSelectedItemColor()
+			textFontSize = getFontSize(bm.selectedItemFont)
+
+		} else {
+			textColor = bm.getItemColor()
+			textFontSize = getFontSize(bm.itemFont)
+		}
 		// textTop = (itemHeight-textFontSize) / 2
 		textTopExpr := div(sub(bm.getItemHeight(), AbsNum(textFontSize)), AbsNum(2))
 
@@ -266,15 +277,9 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 			height:    tt.AbsNum(textFontSize),
 		}
 
-		var textColor color.Color
-		if i == 0 {
-			textColor = bm.getSelectedItemColor()
-		} else {
-			textColor = bm.getItemColor()
-		}
 		text.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
 			textStr := menuItems[idx].text
-			n.drawText(ctx, ec, textStr, textColor)
+			n.drawText(ctx, ec, textStr, textColor, textFontSize)
 		}
 
 		item.addChild(icon)

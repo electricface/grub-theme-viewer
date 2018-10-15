@@ -1,6 +1,9 @@
 package main
 
 import (
+	"strconv"
+	"strings"
+
 	tt "github.com/electricface/grub-theme-viewer/themetxt"
 
 	"flag"
@@ -81,6 +84,8 @@ func main() {
 	}
 }
 
+const globalFontFile = "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
+
 func draw(theme *tt.Theme) {
 	ec := newEvalContent()
 	ec.setUnknown("screen-width", float64(optScreenWidth))
@@ -89,11 +94,11 @@ func draw(theme *tt.Theme) {
 	root := themeToNodeTree(theme, optScreenWidth, optScreenHeight)
 	//textFontSize := 32
 	ctx := gg.NewContext(optScreenWidth, optScreenHeight)
-	fontFile := "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
-	err := ctx.LoadFontFace(fontFile, 32)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//fontFile := "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
+	//err := ctx.LoadFontFace(fontFile, 32)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 	// 画背景
 	root.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
 		n.drawImage(ctx, ec, "background.png")
@@ -115,6 +120,8 @@ func themeToNodeTree(theme *tt.Theme, w, h int) *Node {
 	for _, comp := range theme.Components {
 		if comp.Id == "boot_menu" {
 			root.addChild(compBootMenuToNode(comp, root))
+		} else if comp.Id == "label" {
+			root.addChild(compLabelToNode(comp, root))
 		}
 	}
 	return root
@@ -128,4 +135,19 @@ type CompCommon struct {
 	id     string
 
 	node *Node
+}
+
+func getFontSize(font string) int {
+	parts := strings.Split(strings.TrimSpace(font), " ")
+	var sizeStr string
+	for i := len(parts) - 1; i >= 0; i-- {
+		if parts[i] != "" {
+			sizeStr = parts[i]
+			break
+		}
+	}
+
+	v, _ := strconv.Atoi(sizeStr)
+	log.Printf("getFontSize font: %q, result: %v\n", font, v)
+	return v
 }

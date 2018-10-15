@@ -70,7 +70,7 @@ func (c *Component) Dump(indent int) {
 	fmt.Printf("%s+ %s {\n", indentStr, c.Id)
 
 	for _, prop := range c.Props {
-		fmt.Printf("%s    %s = %#v\n", indentStr, prop.name, prop.value)
+		fmt.Printf("%s    %s = %T %#v\n", indentStr, prop.name, prop.value, prop.value)
 	}
 
 	for _, child := range c.Children {
@@ -124,7 +124,7 @@ func (t *Theme) GetPropString(name string) (string, bool) {
 
 func (t *Theme) Dump() {
 	for _, prop := range t.Props {
-		fmt.Printf("%s : %#v\n", prop.name, prop.value)
+		fmt.Printf("%s : %T %#v\n", prop.name, prop.value, prop.value)
 	}
 	for _, comp := range t.Components {
 		comp.Dump(0)
