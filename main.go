@@ -18,9 +18,11 @@ import (
 )
 
 var optThemeFile string
+var optThemeDir string
 var optDraw bool
 var optDump bool
 var optDrawOutline bool
+var optOutput string
 
 var optScreenWidth int
 var optScreenHeight int
@@ -29,7 +31,9 @@ var globalThemeDir string
 
 func init() {
 	flag.StringVar(&optThemeFile, "theme", "", "theme file")
+	flag.StringVar(&optThemeDir, "theme-dir", "", "theme dir")
 	flag.BoolVar(&optDraw, "draw", false, "draw out.png")
+	flag.StringVar(&optOutput, "out", "./out.png", "output image file")
 	flag.BoolVar(&optDump, "dump", false, "dump theme")
 	flag.BoolVar(&optDrawOutline, "outline", false, "draw outline")
 
@@ -56,7 +60,7 @@ func testMain() {
 		left:   tt.RelNum(50),
 		top:    tt.RelNum(50),
 		width:  tt.RelNum(50),
-		height: tt.CombinedNum{50, 10},
+		height: tt.CombinedNum{Rel: 50, Abs: 10, Op: tt.CombinedNumSub},
 	}
 	c1.addChild(c11)
 
@@ -68,9 +72,14 @@ func testMain() {
 }
 
 func main() {
+	log.SetFlags(log.Lshortfile)
 	flag.Parse()
 
-	globalThemeDir = filepath.Dir(optThemeFile)
+	if optThemeDir == "" {
+		globalThemeDir = filepath.Dir(optThemeFile)
+	} else {
+		globalThemeDir = optThemeDir
+	}
 
 	theme, err := tt.ParseThemeFile(optThemeFile)
 	if err != nil {
@@ -103,7 +112,7 @@ func draw(theme *tt.Theme) {
 	}
 
 	root.DrawTo(ctx, ec)
-	ctx.SavePNG("./out.png")
+	ctx.SavePNG(optOutput)
 }
 
 func getResourceFile(name string) string {

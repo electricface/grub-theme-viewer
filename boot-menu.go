@@ -114,7 +114,7 @@ func (cc *CompCommon) fillCommonOptions(comp *tt.Component) {
 	}
 	cc.node.width = cc.width
 
-	cc.height, ok = comp.GetPropLength("top")
+	cc.height, ok = comp.GetPropLength("height")
 	if !ok {
 		cc.height = tt.AbsNum(0)
 	}

@@ -39,8 +39,12 @@ func getLengthExpr(l tt.Length, val Expr) Expr {
 
 	case tt.CombinedNum:
 		a := mul(val, div(AbsNum(int(ll.Rel)), AbsNum(100)))
-		// TODO add or sub
-		return sub(a, AbsNum(ll.Abs))
+		switch ll.Op {
+		case tt.CombinedNumSub:
+			return sub(a, AbsNum(ll.Abs))
+		case tt.CombinedNumAdd:
+			return add(a, AbsNum(ll.Abs))
+		}
 	}
 	panic("not expect")
 	return nil
@@ -101,14 +105,6 @@ func (n *Node) getHeight() Expr {
 	ph := n.parent.getHeight()
 	return getLengthExpr(n.height, ph)
 }
-
-//func (n *Node) getExtent() (x, y, w, h float64) {
-//	x = n.getTop()
-//	y = n.getLeft()
-//	w = n.getWidth()
-//	h = n.getHeight()
-//	return
-//}
 
 func (n *Node) addChild(child *Node) {
 	child.parent = n
@@ -316,6 +312,7 @@ func (n *Node) DrawTo(ctx *gg.Context, ec *EvalContext) {
 		y := n.getTop().Eval(ec)
 		w := n.getWidth().Eval(ec)
 		h := n.getHeight().Eval(ec)
+		log.Printf("drawOutline x: %g, y: %g, w: %g, h: %g\n", x, y, w, h)
 		ctx.DrawRectangle(x, y, w, h)
 		ctx.SetRGB(1, 0, 0)
 		ctx.Stroke()

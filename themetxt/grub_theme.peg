@@ -104,11 +104,22 @@ RelNum <- i:Integer '%' {
     return RelNum(i.(int)), nil
 }
 
-CombinedNum <- rel:RelNum '-' abs:AbsNum {
+CombinedNum <- rel:RelNum op:CombinedNumOp abs:AbsNum {
     return CombinedNum{
         Rel: int(rel.(RelNum)),
         Abs: int(abs.(AbsNum)),
+        Op: op.(CombinedNumOp),
     }, nil
+}
+
+CombinedNumOp <- ("+" / "-") {
+    switch c.text[0] {
+    case '+':
+        return CombinedNumAdd, nil
+    case '-':
+        return CombinedNumSub, nil
+    }
+    return 0, nil
 }
 
 String <- '"' (!EscapedChar .)* '"' {

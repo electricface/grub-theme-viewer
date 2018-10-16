@@ -38,7 +38,15 @@ func (v RelNum) GetConvertFunc() func(val float64) float64 {
 type CombinedNum struct {
 	Rel int
 	Abs int
+	Op  CombinedNumOp
 }
+
+type CombinedNumOp int
+
+const (
+	CombinedNumAdd CombinedNumOp = iota
+	CombinedNumSub
+)
 
 func (v CombinedNum) GetConvertFunc() func(val float64) float64 {
 	return func(val float64) float64 {
