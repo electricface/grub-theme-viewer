@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"image/color"
+	"log"
 	"strings"
 
 	"github.com/electricface/grub-theme-viewer/assets"
@@ -51,8 +52,25 @@ func parseColor(str string) color.Color {
 			B: byte(b),
 			A: 255,
 		}
-	} else if strings.Contains(str, "(") {
-		//
+	} else if strings.Contains(str, ",") {
+		// r,g,b
+		// remove space
+		str = strings.Replace(str, " ", "", -1)
+		var r int
+		var g int
+		var b int
+		_, err := fmt.Sscanf(str, "%d,%d,%d", &r, &g, &b)
+		if err != nil {
+			log.Printf("fmt.SScanf failed: str %q, err: %v\n", str, err)
+			return color.Black
+		}
+
+		return color.NRGBA{
+			R: byte(r),
+			G: byte(g),
+			B: byte(b),
+			A: 255,
+		}
 
 	} else {
 		loadSvgColorMap()
