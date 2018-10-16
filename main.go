@@ -1,8 +1,11 @@
 package main
 
 import (
+	"io/ioutil"
 	"strconv"
 	"strings"
+
+	"github.com/electricface/grub-theme-viewer/font"
 
 	tt "github.com/electricface/grub-theme-viewer/themetxt"
 
@@ -79,6 +82,7 @@ func main() {
 	}
 
 	if optDraw {
+		loadAllFonts()
 		// draw
 		draw(theme)
 	}
@@ -92,13 +96,7 @@ func draw(theme *tt.Theme) {
 	ec.setUnknown("screen-height", float64(optScreenHeight))
 
 	root := themeToNodeTree(theme, optScreenWidth, optScreenHeight)
-	//textFontSize := 32
 	ctx := gg.NewContext(optScreenWidth, optScreenHeight)
-	//fontFile := "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
-	//err := ctx.LoadFontFace(fontFile, 32)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
 	// 画背景
 	root.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
 		n.drawImage(ctx, ec, "background.png")
@@ -109,8 +107,6 @@ func draw(theme *tt.Theme) {
 }
 
 func getResourceFile(name string) string {
-	// TODO
-	//dir := "/boot/grub/themes/deepin-green"
 	dir := globalThemeDir
 	return filepath.Join(dir, name)
 }
@@ -119,8 +115,10 @@ func themeToNodeTree(theme *tt.Theme, w, h int) *Node {
 	root := &Node{}
 	for _, comp := range theme.Components {
 		if comp.Id == "boot_menu" {
+			log.Println("add child boot_menu")
 			root.addChild(compBootMenuToNode(comp, root))
 		} else if comp.Id == "label" {
+			log.Println("add child label")
 			root.addChild(compLabelToNode(comp, root))
 		}
 	}
@@ -137,17 +135,83 @@ type CompCommon struct {
 	node *Node
 }
 
-func getFontSize(font string) int {
-	parts := strings.Split(strings.TrimSpace(font), " ")
-	var sizeStr string
-	for i := len(parts) - 1; i >= 0; i-- {
-		if parts[i] != "" {
-			sizeStr = parts[i]
-			break
+func getFont(name string) *font.Face {
+	face := getFontAux(name)
+	if face == nil {
+		panic("not found font face for " + name)
+	}
+	log.Printf("getFont %q -> %q\n", name, face.Name)
+	return face
+}
+
+func getFontAux(name string) *font.Face {
+	for _, face := range allFontFaces {
+		if face.Name == name {
+			return face
 		}
 	}
 
-	v, _ := strconv.Atoi(sizeStr)
-	log.Printf("getFontSize font: %q, result: %v\n", font, v)
-	return v
+	fields := strings.Split(name, " ")
+	var temp []string
+	// match name
+	for _, value := range fields {
+		if value != "" {
+			temp = append(temp, value)
+		}
+	}
+	fields = temp
+
+	if len(fields) >= 3 {
+		// family style size
+		family := strings.Join(fields[:len(fields)-2], " ")
+		sizeStr := fields[len(fields)-1]
+		size, _ := strconv.Atoi(sizeStr)
+
+		// match family and size
+		for _, face := range allFontFaces {
+			if face.Family == family && size == face.PointSize {
+				return face
+			}
+		}
+
+		// match family
+		for _, face := range allFontFaces {
+			if face.Family == family {
+				return face
+			}
+		}
+	}
+
+	if len(fields) >= 2 {
+
+	}
+
+	return nil
+}
+
+var allFontFaces []*font.Face
+
+func loadAllFonts() {
+	fileInfoList, err := ioutil.ReadDir(globalThemeDir)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, fileInfo := range fileInfoList {
+		if fileInfo.IsDir() {
+			continue
+		}
+
+		if filepath.Ext(fileInfo.Name()) == ".pf2" {
+			fontFile := filepath.Join(globalThemeDir, fileInfo.Name())
+			face, err := font.LoadFont(fontFile)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			log.Printf("load font: %s %q %q\n", fileInfo.Name(), face.Name, face.Family)
+			allFontFaces = append(allFontFaces, face)
+		}
+	}
 }

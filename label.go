@@ -84,9 +84,9 @@ func compLabelToNode(comp *tt.Component, parent *Node) *Node {
 	label := newLabel(comp)
 	label.node.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
 
-		fontSize := getFontSize(label.font)
+		fontFace := getFont(label.font)
 		width := n.getWidth().Eval(ec)
-		n.drawText1(ctx, ec, label.getText(), label.getColor(), fontSize,
+		n.drawText1(ctx, ec, label.getText(), label.getColor(), fontFace,
 			width, label.getAlign())
 	}
 	return label.node

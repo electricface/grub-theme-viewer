@@ -4,6 +4,8 @@ import (
 	"image/color"
 	"log"
 
+	"github.com/electricface/grub-theme-viewer/font"
+
 	tt "github.com/electricface/grub-theme-viewer/themetxt"
 
 	"github.com/fogleman/gg"
@@ -288,23 +290,24 @@ func (n *Node) drawStyleBox(ctx *gg.Context, ec *EvalContext, name string) {
 	}
 }
 
-func (n *Node) drawText(ctx *gg.Context, ec *EvalContext, str string, color color.Color, fontSize int) {
+func (n *Node) drawText(ctx *gg.Context, ec *EvalContext, str string, color color.Color, fontFace *font.Face) {
 	x := n.getLeft().Eval(ec)
 	y := n.getTop().Eval(ec)
 	ctx.SetColor(color)
 
-	ctx.LoadFontFace(globalFontFile, float64(fontSize))
+	ctx.SetFontFace(fontFace)
+	log.Printf("drawText str: %q, x: %g, y: %g\n", str, x, y)
 	ctx.DrawStringAnchored(str, x, y, 0, 1)
 }
 
-func (n *Node) drawText1(ctx *gg.Context, ec *EvalContext, str string, color color.Color, fontSize int, width float64, align gg.Align) {
+func (n *Node) drawText1(ctx *gg.Context, ec *EvalContext, str string, color color.Color, fontFace *font.Face, width float64, align gg.Align) {
 	x := n.getLeft().Eval(ec)
 	y := n.getTop().Eval(ec)
 	ctx.SetColor(color)
 
-	ctx.LoadFontFace(globalFontFile, float64(fontSize))
-	//ctx.DrawStringAnchored(str, x, y, 0, 1)
-	ctx.DrawStringWrapped(str, x, y, 0, 1, width, 0, align)
+	ctx.SetFontFace(fontFace)
+	log.Printf("drawText1 str: %q, x: %g, y: %g, width: %g\n", str, x, y, width)
+	ctx.DrawStringWrapped(str, x, y, 0, 0, width, 1, align)
 }
 
 func (n *Node) DrawTo(ctx *gg.Context, ec *EvalContext) {

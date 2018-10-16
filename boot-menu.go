@@ -4,6 +4,8 @@ import (
 	"image/color"
 	"strings"
 
+	"github.com/electricface/grub-theme-viewer/font"
+
 	tt "github.com/electricface/grub-theme-viewer/themetxt"
 
 	"github.com/fogleman/gg"
@@ -252,17 +254,20 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 		}
 
 		var textColor color.Color
-		var textFontSize int
+		//var textFontSize int
+		var textFontFace *font.Face
 		if i == 0 {
 			textColor = bm.getSelectedItemColor()
-			textFontSize = getFontSize(bm.selectedItemFont)
+			textFontFace = getFont(bm.selectedItemFont)
 
 		} else {
 			textColor = bm.getItemColor()
-			textFontSize = getFontSize(bm.itemFont)
+			textFontFace = getFont(bm.itemFont)
 		}
-		// textTop = (itemHeight-textFontSize) / 2
-		textTopExpr := div(sub(bm.getItemHeight(), AbsNum(textFontSize)), AbsNum(2))
+		textFontHeight := textFontFace.Metrics().Height.Round()
+
+		// textTop = (bm.ItemHeight - textFontHeight) / 2
+		textTopExpr := div(sub(bm.getItemHeight(), AbsNum(textFontHeight)), AbsNum(2))
 
 		// textWidth = itemWidth - iconWidth - itemIconSpace
 		textWidthExpr := sub(sub(itemWidthExpr, bm.getIconWidth()),
@@ -274,12 +279,12 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 			leftExpr:  textLeftExpr,
 			topExpr:   textTopExpr,
 			widthExpr: textWidthExpr,
-			height:    tt.AbsNum(textFontSize),
+			height:    tt.AbsNum(textFontHeight),
 		}
 
 		text.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
 			textStr := menuItems[idx].text
-			n.drawText(ctx, ec, textStr, textColor, textFontSize)
+			n.drawText(ctx, ec, textStr, textColor, textFontFace)
 		}
 
 		item.addChild(icon)
