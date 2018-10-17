@@ -45,9 +45,9 @@ CPD <- _ option:Option _ '=' _ val:Value _ {
     }, nil
 }
 
-Component <- '+' _ id:ID _ '{' _  elements:ComponentElement*  _ '}' _ {
+Component <- '+' _ type0:ID _ '{' _  elements:ComponentElement*  _ '}' _ {
     comp := &Component{
-        Id: id.(string),
+        Type: type0.(string),
     }
     elems := toIfaceSlice(elements)
     for _, elem := range elems {

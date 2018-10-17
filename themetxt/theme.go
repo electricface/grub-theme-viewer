@@ -2,6 +2,8 @@ package themetxt
 
 import (
 	"fmt"
+	"io"
+	"strconv"
 	"strings"
 )
 
@@ -56,7 +58,7 @@ func (v CombinedNum) GetConvertFunc() func(val float64) float64 {
 }
 
 type Component struct {
-	Id       string
+	Type     string
 	Props    []*Property
 	Children []*Component
 }
@@ -75,7 +77,7 @@ func (c *Component) GetPropBool(name string) (bool, bool) {
 
 func (c *Component) Dump(indent int) {
 	indentStr := strings.Repeat(" ", indent*4)
-	fmt.Printf("%s+ %s {\n", indentStr, c.Id)
+	fmt.Printf("%s+ %s {\n", indentStr, c.Type)
 
 	for _, prop := range c.Props {
 		fmt.Printf("%s    %s = %T %#v\n", indentStr, prop.name, prop.value, prop.value)
@@ -86,6 +88,48 @@ func (c *Component) Dump(indent int) {
 	}
 
 	fmt.Printf("%s}\n", indentStr)
+}
+
+func (c *Component) writeTo(w io.Writer, indent int) {
+	indentStr := strings.Repeat(" ", indent*4)
+	fmt.Fprintf(w, "%s+ %s {\n", indentStr, c.Type)
+
+	for _, prop := range c.Props {
+		fmt.Fprintf(w, "%s    %s = %s\n", indentStr, prop.name,
+			propValueToString(prop.value))
+	}
+
+	for _, child := range c.Children {
+		child.writeTo(w, indent+1)
+	}
+
+	fmt.Fprintf(w, "%s}\n", indentStr)
+}
+
+func (c *Component) WriteTo(w io.Writer) {
+	c.writeTo(w, 0)
+}
+
+func propValueToString(value interface{}) string {
+	switch val := value.(type) {
+	case string:
+		return strconv.Quote(val)
+	case AbsNum:
+		return strconv.Itoa(int(val))
+	case RelNum:
+		return strconv.Itoa(int(val)) + "%"
+	case CombinedNum:
+		var format string
+		switch val.Op {
+		case CombinedNumAdd:
+			format = "%d%%+%d"
+		case CombinedNumSub:
+			format = "%d%%-%d"
+		}
+		return fmt.Sprintf(format, val.Rel, val.Abs)
+	default:
+		return fmt.Sprintf("%v", val)
+	}
 }
 
 func getPropString(props []*Property, name string) (string, bool) {
@@ -136,6 +180,15 @@ func (t *Theme) Dump() {
 	}
 	for _, comp := range t.Components {
 		comp.Dump(0)
+	}
+}
+
+func (t *Theme) WriteTo(w io.Writer) {
+	for _, prop := range t.Props {
+		fmt.Fprintf(w, "%s : %s\n", prop.name, propValueToString(prop.value))
+	}
+	for _, comp := range t.Components {
+		comp.WriteTo(w)
 	}
 }
 

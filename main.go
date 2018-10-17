@@ -123,10 +123,10 @@ func getResourceFile(name string) string {
 func themeToNodeTree(theme *tt.Theme, w, h int) *Node {
 	root := &Node{}
 	for _, comp := range theme.Components {
-		if comp.Id == "boot_menu" {
+		if comp.Type == "boot_menu" {
 			log.Println("add child boot_menu")
 			root.addChild(compBootMenuToNode(comp, root))
-		} else if comp.Id == "label" {
+		} else if comp.Type == "label" {
 			log.Println("add child label")
 			root.addChild(compLabelToNode(comp, root))
 		}
