@@ -7,6 +7,17 @@ import (
 	"strings"
 )
 
+const (
+	ComponentTypeBootMenu         = "boot_menu"
+	ComponentTypeProgressBar      = "progress_bar"
+	ComponentTypeCircularProgress = "circular_progress"
+	ComponentTypeLabel            = "label"
+	ComponentTypeImage            = "image"
+	ComponentTypeHBox             = "hbox"
+	ComponentTypeVBox             = "vbox"
+	ComponentTypeCanvas           = "canvas"
+)
+
 type Property struct {
 	name  string
 	value interface{}
@@ -63,6 +74,10 @@ type Component struct {
 	Children []*Component
 }
 
+func (c *Component) GetProp(name string) (interface{}, bool) {
+	return getProp(c.Props, name)
+}
+
 func (c *Component) GetPropString(name string) (string, bool) {
 	return getPropString(c.Props, name)
 }
@@ -73,6 +88,18 @@ func (c *Component) GetPropLength(name string) (Length, bool) {
 
 func (c *Component) GetPropBool(name string) (bool, bool) {
 	return getPropBool(c.Props, name)
+}
+
+func (c *Component) SetProp(name string, value interface{}) {
+	for _, prop := range c.Props {
+		if prop.name == name {
+			prop.value = value
+			return
+		}
+	}
+
+	newProp := &Property{name: name, value: value}
+	c.Props = append(c.Props, newProp)
 }
 
 func (c *Component) Dump(indent int) {
@@ -95,6 +122,9 @@ func (c *Component) writeTo(w io.Writer, indent int) {
 	fmt.Fprintf(w, "%s+ %s {\n", indentStr, c.Type)
 
 	for _, prop := range c.Props {
+		if strings.HasPrefix(prop.name, "_") {
+			continue
+		}
 		fmt.Fprintf(w, "%s    %s = %s\n", indentStr, prop.name,
 			propValueToString(prop.value))
 	}

@@ -395,3 +395,7 @@ func parseCharInfo(r io.Reader) (*CharInfo, error) {
 	d.mask = img
 	return &d, nil
 }
+
+func (f *Face) Height() int {
+	return f.Ascent + f.Descent
+}
