@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 
+	"pkg.deepin.io/lib/locale"
+
 	"github.com/nfnt/resize"
 
 	"github.com/electricface/grub-theme-viewer/font"
@@ -27,6 +29,14 @@ import (
 var optScreenHeight int
 var optScreenWidth int
 var optThemeDir string
+var optLang string
+
+func init() {
+	flag.IntVar(&optScreenWidth, "width", 1366, "")
+	flag.IntVar(&optScreenHeight, "height", 768, "")
+	flag.StringVar(&optThemeDir, "theme-dir", "", "")
+	flag.StringVar(&optLang, "lang", "en", "language")
+}
 
 func adjustBackground(theme *tt.Theme) {
 	desktopImageFile, _ := theme.GetPropString("desktop-image")
@@ -136,12 +146,6 @@ func round(f float64) int {
 	return i
 }
 
-func init() {
-	flag.IntVar(&optScreenWidth, "width", 1366, "")
-	flag.IntVar(&optScreenHeight, "height", 768, "")
-	flag.StringVar(&optThemeDir, "theme-dir", "", "")
-}
-
 func main() {
 	flag.Parse()
 	log.SetFlags(log.Lshortfile)
@@ -172,7 +176,7 @@ func main() {
 			adjustResourcesOsLogos(iconWidth, iconHeight)
 
 		} else if comp.Type == tt.ComponentTypeLabel {
-			adjustLabel1(comp, vars)
+			adjustLabel(comp, vars)
 		}
 	}
 
@@ -283,7 +287,7 @@ func copyVars(vars map[string]float64) map[string]float64 {
 	return varsCopy
 }
 
-func adjustLabel1(comp *tt.Component, vars map[string]float64) {
+func adjustLabel(comp *tt.Component, vars map[string]float64) {
 	vars = copyVars(vars)
 	face, err := adjustFont(comp, "font", vars)
 	if err != nil {
@@ -293,26 +297,26 @@ func adjustLabel1(comp *tt.Component, vars map[string]float64) {
 	fontHeight := face.Height()
 	vars["font_height"] = float64(fontHeight)
 
-	//top := round(vars["screen_height"] - 1.25*float64(fontHeight))
-	//comp.SetProp("top", top)
 	for _, propName := range []string{"left", "top", "width", "height"} {
 		adjustProp(comp, propName, vars)
 	}
-}
 
-//func adjustLabel2(comp *tt.Component, vars map[string]float64) {
-//	vars = copyVars(vars)
-//	face, err := adjustFont(comp, "font", vars)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//
-//	fontHeight := face.Height()
-//	vars["font_height"] = float64(fontHeight)
-//
-//	top := round(vars["screen_height"] - 2.5*float64(fontHeight))
-//	comp.SetProp("top", top)
-//}
+	localeVars := locale.GetLocaleVariants(optLang)
+	var text string
+	var textFound bool
+	for _, localeVar := range localeVars {
+		var ok bool
+		text, ok = comp.GetPropString("_text_" + localeVar)
+		if ok {
+			textFound = true
+			break
+		}
+	}
+	if !textFound {
+		text, _ = comp.GetPropString("_text_en")
+	}
+	comp.SetProp("text", text)
+}
 
 func eval(vars map[string]float64, expr string) (float64, error) {
 	bc := exec.Command("bc")
