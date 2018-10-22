@@ -9,6 +9,7 @@ import (
 	"image"
 	"image/png"
 	_ "image/png"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -42,6 +43,46 @@ func adjustBackground(theme *tt.Theme) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func adjustResourcesOsLogos(width, height int) {
+	dir := filepath.Join(optThemeDir, "resources/os-logos")
+	fileInfos, err := ioutil.ReadDir(dir)
+	if err != nil {
+		log.Println("WARN:", err)
+		return
+	}
+
+	for _, fileInfo := range fileInfos {
+		if fileInfo.IsDir() {
+			continue
+		}
+
+		file := filepath.Join(dir, fileInfo.Name())
+		ext := filepath.Ext(fileInfo.Name())
+		if ext != ".svg" {
+			continue
+		}
+		outFileName := strings.TrimSuffix(fileInfo.Name(), ext) + ".png"
+		outFile := filepath.Join(optThemeDir, "icons", outFileName)
+		err = convertSvg(file, outFile, width, height)
+		if err != nil {
+			log.Println("WARN:", err)
+		}
+	}
+}
+
+func convertSvg(svgFile, outFile string, width, height int) error {
+	cmd := exec.Command("rsvg-convert", "-o", outFile,
+		"-w", strconv.Itoa(width),
+		"-h", strconv.Itoa(height),
+		"-f", "png",
+		svgFile)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	log.Printf("$ rsvg-convert --output %s -width %d -height %d -f png %s\n",
+		outFile, width, height, svgFile)
+	return cmd.Run()
 }
 
 func loadImage(filename string) (image.Image, error) {
@@ -123,6 +164,13 @@ func main() {
 	for _, comp := range theme.Components {
 		if comp.Type == tt.ComponentTypeBootMenu {
 			adjustBootMenu(comp, vars)
+
+			iconWidth0, _ := comp.GetProp("icon_width")
+			iconWidth := iconWidth0.(int)
+			iconHeight0, _ := comp.GetProp("icon_height")
+			iconHeight := iconHeight0.(int)
+			adjustResourcesOsLogos(iconWidth, iconHeight)
+
 		} else if comp.Type == tt.ComponentTypeLabel {
 			adjustLabel1(comp, vars)
 		}
