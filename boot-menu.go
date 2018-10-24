@@ -305,37 +305,37 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 }
 
 const (
-	styleBoxNorthwest = iota
-	styleBoxNorth
-	styleBoxNortheast
-	styleBoxWest
-	styleBoxCenter
-	styleBoxEast
-	styleBoxSouthwest
-	styleBoxSouth
-	styleBoxSoutheast
+	styleBoxNW = iota
+	styleBoxN
+	styleBoxNE
+	styleBoxW
+	styleBoxC
+	styleBoxE
+	styleBoxSW
+	styleBoxS
+	styleBoxSE
 )
 
 func getPixmapName(name string, part int) string {
 	var partStr string
 	switch part {
-	case styleBoxNorthwest:
+	case styleBoxNW:
 		partStr = "nw"
-	case styleBoxNorth:
+	case styleBoxN:
 		partStr = "n"
-	case styleBoxNortheast:
+	case styleBoxNE:
 		partStr = "ne"
-	case styleBoxWest:
+	case styleBoxW:
 		partStr = "w"
-	case styleBoxCenter:
+	case styleBoxC:
 		partStr = "c"
-	case styleBoxEast:
+	case styleBoxE:
 		partStr = "e"
-	case styleBoxSouthwest:
+	case styleBoxSW:
 		partStr = "sw"
-	case styleBoxSouth:
+	case styleBoxS:
 		partStr = "s"
-	case styleBoxSoutheast:
+	case styleBoxSE:
 		partStr = "se"
 	}
 	return strings.Replace(name, "*", partStr, 1)

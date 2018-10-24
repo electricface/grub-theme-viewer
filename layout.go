@@ -1,6 +1,7 @@
 package main
 
 import (
+	"image"
 	"image/color"
 	"log"
 
@@ -127,6 +128,10 @@ func (n *Node) drawImage(ctx *gg.Context, ec *EvalContext, name string) error {
 	return nil
 }
 
+func loadStyleBoxSlice(name string, part int) (image.Image, error) {
+	return gg.LoadImage(getResourceFile(getPixmapName(name, part)))
+}
+
 func (n *Node) drawStyleBox(ctx *gg.Context, ec *EvalContext, name string) {
 	if name == "" {
 		return
@@ -140,147 +145,204 @@ func (n *Node) drawStyleBox(ctx *gg.Context, ec *EvalContext, name string) {
 	color1 := "#f9f806"
 	color2 := "#f97306"
 
+	var padLeft int
+	var padRight int
+	var padTop int
+	var padBottom int
+
 	// nw
-	imgNW, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxNorthwest)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		imgNWWidth := imgNW.Bounds().Dx()
-		imgNWHeight := imgNW.Bounds().Dy()
-		ctx.DrawImage(imgNW, x-imgNWWidth, y-imgNWHeight)
+	imgNW, _ := loadStyleBoxSlice(name, styleBoxNW)
+	if imgNW != nil {
+		padLeft = imgNW.Bounds().Dx() // width
+		padTop = imgNW.Bounds().Dy()  // height
+	}
+
+	// n
+	imgN, _ := loadStyleBoxSlice(name, styleBoxN)
+	if imgN != nil {
+		if padTop == 0 {
+			padTop = imgN.Bounds().Dy() // height
+		}
+	}
+
+	// ne
+	imgNE, _ := loadStyleBoxSlice(name, styleBoxNE)
+	if imgNE != nil {
+		if padTop == 0 {
+			padTop = imgNE.Bounds().Dy() // height
+		}
+
+		padRight = imgNE.Bounds().Dx() // width
+	}
+
+	// w
+	imgW, _ := loadStyleBoxSlice(name, styleBoxW)
+	if imgW != nil {
+		if padLeft == 0 {
+			padLeft = imgW.Bounds().Dx() // width
+		}
+	}
+
+	// c
+	imgC, _ := loadStyleBoxSlice(name, styleBoxC)
+
+	// e
+	imgE, _ := loadStyleBoxSlice(name, styleBoxE)
+	if imgE != nil {
+		if padRight == 0 {
+			padRight = imgE.Bounds().Dx() // width
+		}
+	}
+
+	// sw
+	imgSW, _ := loadStyleBoxSlice(name, styleBoxSW)
+	if imgSW != nil {
+		if padLeft == 0 {
+			padLeft = imgSW.Bounds().Dx() // width
+		}
+
+		padBottom = imgSW.Bounds().Dy() // height
+	}
+
+	// s
+	imgS, _ := loadStyleBoxSlice(name, styleBoxS)
+	if imgS != nil {
+		if padBottom == 0 {
+			padBottom = imgS.Bounds().Dy() // height
+		}
+	}
+
+	// se
+	imgSE, _ := loadStyleBoxSlice(name, styleBoxSE)
+	if imgSE != nil {
+		if padBottom == 0 {
+			padBottom = imgSE.Bounds().Dy() // height
+		}
+		if padRight == 0 {
+			padRight = imgSE.Bounds().Dx() // width
+		}
+	}
+
+	// ---
+	// draw
+	// nw
+	if imgNW != nil {
+		ctx.DrawImage(imgNW, x, y)
 
 		if optDrawOutline {
 			ctx.SetHexColor(color1)
-			ctx.DrawRectangle(float64(x-imgNWWidth), float64(y-imgNWHeight),
-				float64(imgNWWidth), float64(imgNWHeight))
+			ctx.DrawRectangle(float64(x), float64(y),
+				float64(imgNW.Bounds().Dx()), float64(imgNW.Bounds().Dy()))
 			ctx.Stroke()
 		}
 	}
 
 	// n
-	imgN, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxNorth)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		imgNHeight := imgN.Bounds().Dy()
-		imgN = resize.Resize(uint(width), uint(imgNHeight), imgN, resize.Lanczos3)
-		ctx.DrawImage(imgN, x, y-imgNHeight)
+	if imgN != nil {
+		imgN = resize.Resize(uint(width-padLeft-padRight), uint(padTop),
+			imgN, resize.Lanczos3)
+		ctx.DrawImage(imgN, x+padLeft, y)
 
 		if optDrawOutline {
 			ctx.SetHexColor(color2)
-			ctx.DrawRectangle(float64(x), float64(y-imgNHeight),
-				float64(width), float64(imgNHeight))
+			ctx.DrawRectangle(float64(x+padLeft), float64(y),
+				float64(width-padLeft-padRight), float64(padTop))
 			ctx.Stroke()
 		}
 	}
 
 	// ne
-	imgNE, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxNortheast)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		imgNEWidth := imgNE.Bounds().Dx()
-		imgNEHeight := imgNE.Bounds().Dy()
-		ctx.DrawImage(imgNE, x+width, y-imgNEHeight)
+	if imgNE != nil {
+		ctx.DrawImage(imgNE, x+width-padRight, y)
 
 		if optDrawOutline {
 			ctx.SetHexColor(color1)
-			ctx.DrawRectangle(float64(x+width), float64(y-imgNEHeight),
-				float64(imgNEWidth), float64(imgNEHeight))
+			ctx.DrawRectangle(float64(x+width-padRight), float64(y),
+				float64(imgNE.Bounds().Dx()), float64(imgNE.Bounds().Dy()))
 			ctx.Stroke()
 		}
 	}
 
 	// w
-	imgW, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxWest)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		imgWWidth := imgW.Bounds().Dx()
-		imgW = resize.Resize(uint(imgWWidth), uint(height), imgW, resize.Lanczos3)
-		ctx.DrawImage(imgW, x-imgWWidth, y)
+	if imgW != nil {
+		imgW = resize.Resize(uint(padLeft), uint(height-padTop-padBottom),
+			imgW, resize.Lanczos3)
+		ctx.DrawImage(imgW, x, y+padTop)
 
 		if optDrawOutline {
 			ctx.SetHexColor(color2)
-			ctx.DrawRectangle(float64(x-imgWWidth), float64(y),
-				float64(uint(imgWWidth)), float64(uint(height)))
+			ctx.DrawRectangle(float64(x), float64(y+padTop),
+				float64(padLeft), float64(height-padTop-padBottom))
 			ctx.Stroke()
 		}
 	}
 
 	// c
-	imgC, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxCenter)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		imgC = resize.Resize(uint(width), uint(height), imgC, resize.Lanczos3)
-		ctx.DrawImage(imgC, x, y)
+	if imgC != nil {
+		imgC = resize.Resize(uint(width-padLeft-padRight),
+			uint(height-padTop-padBottom),
+			imgC, resize.Lanczos3)
+		ctx.DrawImage(imgC, x+padLeft, y+padTop)
+
+		if optDrawOutline {
+			ctx.SetHexColor(color1)
+			ctx.DrawRectangle(float64(x+padLeft), float64(y+padTop),
+				float64(width-padLeft-padRight),
+				float64(height-padTop-padBottom))
+			ctx.Stroke()
+		}
 	}
 
 	// e
-	imgE, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxEast)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		imgEWidth := imgE.Bounds().Dx()
-		imgE = resize.Resize(uint(imgEWidth), uint(height), imgE, resize.Lanczos3)
-		ctx.DrawImage(imgE, x+width, y)
+	if imgE != nil {
+		imgE = resize.Resize(uint(padRight), uint(height-padTop-padBottom),
+			imgE, resize.Lanczos3)
+		ctx.DrawImage(imgE, x+width-padRight, y+padTop)
 
 		if optDrawOutline {
 			ctx.SetHexColor(color2)
-			ctx.DrawRectangle(float64(x+width), float64(y),
-				float64(uint(imgEWidth)), float64(uint(height)))
+			ctx.DrawRectangle(float64(x+width-padRight), float64(y+padTop),
+				float64(padRight), float64(height-padTop-padBottom))
 			ctx.Stroke()
 		}
 	}
 
 	// sw
-	imgSW, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxSouthwest)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		imgSWWidth := imgSW.Bounds().Dx()
-		imgSWHeight := imgSW.Bounds().Dy()
-		ctx.DrawImage(imgSW, x-imgSWWidth, y+height)
+	if imgSW != nil {
+		ctx.DrawImage(imgSW, x, y+height-padBottom)
 
 		if optDrawOutline {
 			ctx.SetHexColor(color1)
-			ctx.DrawRectangle(float64(x-imgSWWidth), float64(y+height),
-				float64(imgSWWidth), float64(imgSWHeight))
+			ctx.DrawRectangle(float64(x), float64(y+height-padBottom),
+				float64(imgSW.Bounds().Dx()), float64(imgSW.Bounds().Dy()))
 			ctx.Stroke()
 		}
 	}
 
 	// s
-	imgS, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxSouth)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		imgSHeight := imgS.Bounds().Dy()
-		imgS = resize.Resize(uint(width), uint(imgSHeight), imgS, resize.Lanczos3)
-		ctx.DrawImage(imgS, x, y+height)
+	if imgS != nil {
+		imgS = resize.Resize(uint(width-padLeft-padRight),
+			uint(padBottom),
+			imgS, resize.Lanczos3)
+		ctx.DrawImage(imgS, x+padLeft, y+height-padBottom)
 
 		if optDrawOutline {
 			ctx.SetHexColor(color2)
-			ctx.DrawRectangle(float64(x), float64(y+height),
-				float64(width), float64(imgSHeight))
+			ctx.DrawRectangle(float64(x+padLeft), float64(y+height-padBottom),
+				float64(width-padLeft-padRight),
+				float64(padBottom))
 			ctx.Stroke()
 		}
 	}
 
 	// se
-	imgSE, err := gg.LoadImage(getResourceFile(getPixmapName(name, styleBoxSoutheast)))
-	if err != nil {
-		log.Println(err)
-	} else {
-		ctx.DrawImage(imgSE, x+width, y+height)
+	if imgSE != nil {
+		ctx.DrawImage(imgSE, x+width-padRight, y+height-padBottom)
 
 		if optDrawOutline {
-			imgSEWidth := imgSE.Bounds().Dx()
-			imgSEHeight := imgSE.Bounds().Dy()
 			ctx.SetHexColor(color1)
-			ctx.DrawRectangle(float64(x+width), float64(y+height),
-				float64(imgSEWidth), float64(imgSEHeight))
+			ctx.DrawRectangle(float64(x+width-padRight), float64(y+height-padBottom),
+				float64(imgSE.Bounds().Dx()), float64(imgSE.Bounds().Dy()))
 			ctx.Stroke()
 		}
 	}
