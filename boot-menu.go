@@ -291,8 +291,8 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 		textWidthExpr := sub(sub(itemWidthExpr, bm.getIconWidth()),
 			bm.getItemIconSpace())
 
-		// textLeft = iconWidth + itemIconSpace
-		textLeftExpr := add(bm.getIconWidth(), bm.getItemIconSpace())
+		// textLeft = bm.padLeft + iconWidth + itemIconSpace
+		textLeftExpr := add(AbsNum(bm.padLeft), add(bm.getIconWidth(), bm.getItemIconSpace()))
 		text := &Node{
 			leftExpr:  textLeftExpr,
 			topExpr:   textTopExpr,
