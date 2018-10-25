@@ -132,6 +132,79 @@ func loadStyleBoxSlice(name string, part int) (image.Image, error) {
 	return gg.LoadImage(getResourceFile(getPixmapName(name, part)))
 }
 
+func getPads(name string) (padLeft, padRight, padTop, padBottom int) {
+	// nw
+	imgNW, _ := loadStyleBoxSlice(name, styleBoxNW)
+	if imgNW != nil {
+		padLeft = imgNW.Bounds().Dx() // width
+		padTop = imgNW.Bounds().Dy()  // height
+	}
+
+	// n
+	imgN, _ := loadStyleBoxSlice(name, styleBoxN)
+	if imgN != nil {
+		if padTop == 0 {
+			padTop = imgN.Bounds().Dy() // height
+		}
+	}
+
+	// ne
+	imgNE, _ := loadStyleBoxSlice(name, styleBoxNE)
+	if imgNE != nil {
+		if padTop == 0 {
+			padTop = imgNE.Bounds().Dy() // height
+		}
+
+		padRight = imgNE.Bounds().Dx() // width
+	}
+
+	// w
+	imgW, _ := loadStyleBoxSlice(name, styleBoxW)
+	if imgW != nil {
+		if padLeft == 0 {
+			padLeft = imgW.Bounds().Dx() // width
+		}
+	}
+
+	// e
+	imgE, _ := loadStyleBoxSlice(name, styleBoxE)
+	if imgE != nil {
+		if padRight == 0 {
+			padRight = imgE.Bounds().Dx() // width
+		}
+	}
+
+	// sw
+	imgSW, _ := loadStyleBoxSlice(name, styleBoxSW)
+	if imgSW != nil {
+		if padLeft == 0 {
+			padLeft = imgSW.Bounds().Dx() // width
+		}
+
+		padBottom = imgSW.Bounds().Dy() // height
+	}
+
+	// s
+	imgS, _ := loadStyleBoxSlice(name, styleBoxS)
+	if imgS != nil {
+		if padBottom == 0 {
+			padBottom = imgS.Bounds().Dy() // height
+		}
+	}
+
+	// se
+	imgSE, _ := loadStyleBoxSlice(name, styleBoxSE)
+	if imgSE != nil {
+		if padBottom == 0 {
+			padBottom = imgSE.Bounds().Dy() // height
+		}
+		if padRight == 0 {
+			padRight = imgSE.Bounds().Dx() // width
+		}
+	}
+	return
+}
+
 func (n *Node) drawStyleBox(ctx *gg.Context, ec *EvalContext, name string) {
 	if name == "" {
 		return

@@ -39,6 +39,12 @@ type BootMenu struct {
 	visible         bool
 	menuPixmapStyle string
 
+	// pads
+	padLeft   int
+	padRight  int
+	padTop    int
+	padBottom int
+
 	itemFont                string
 	itemColor               string
 	itemPixmapStyle         string
@@ -136,6 +142,8 @@ func newBootMenu(comp *tt.Component, parent *Node) *BootMenu {
 
 	bm.menuPixmapStyle, _ = comp.GetPropString("menu_pixmap_style")
 
+	bm.padLeft, bm.padRight, bm.padTop, bm.padBottom = getPads(bm.menuPixmapStyle)
+
 	bm.itemFont, ok = comp.GetPropString("item_font")
 	if !ok {
 		bm.itemFont = "Unknown Regular 16"
@@ -211,37 +219,47 @@ func compBootMenuToNode(comp *tt.Component, parent *Node) *Node {
 	bm := newBootMenu(comp, parent)
 	bmNode := bm.node
 
-	y := bm.getItemPadding()
+	y := add(AbsNum(bm.padBottom), bm.getItemPadding())
 
 	// itemWidth = bootMenu.width - (2 * itemPadding) - 2
-	itemWidthExpr := sub(sub(bmNode.getWidth(),
-		mul(AbsNum(2), bm.getItemPadding())), AbsNum(2))
+	// - bootMenu.padLeft - bootMenu.padRight
+	itemWidthExpr := sub(sub(sub(sub(bmNode.getWidth(),
+		mul(AbsNum(2), bm.getItemPadding())), AbsNum(2)),
+		AbsNum(bm.padLeft)), AbsNum(bm.padRight))
+
+	// itemLeft = bootMenu.padLeft + bootMenu.ItemPadding
+	itemLeftExpr := add(AbsNum(bm.padLeft), bm.getItemPadding())
 
 	for i := 0; i < 4; i++ {
 		// add item
 		item := &Node{
-			left:      bm.itemPadding,
+			leftExpr:  itemLeftExpr,
 			topExpr:   y,
 			widthExpr: itemWidthExpr,
 			height:    bm.itemHeight,
 		}
 
 		// select first item
+		var itemPixmapStyle string
 		if i == 0 {
 			item.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
 				n.drawStyleBox(ctx, ec, bm.selectedItemPixmapStyle)
 			}
+			itemPixmapStyle = bm.selectedItemPixmapStyle
 		} else {
 			item.draw = func(n *Node, ctx *gg.Context, ec *EvalContext) {
 				n.drawStyleBox(ctx, ec, bm.itemPixmapStyle)
 			}
+			itemPixmapStyle = bm.itemPixmapStyle
 		}
+
+		itemPadLeft, _, _, _ := getPads(itemPixmapStyle)
 
 		// iconTop = (itemHeight-iconHeight) / 2
 		iconTopExpr := div(sub(bm.getItemHeight(), bm.getIconHeight()), AbsNum(2))
 
 		icon := &Node{
-			left:    tt.AbsNum(0),
+			left:    tt.AbsNum(itemPadLeft),
 			topExpr: iconTopExpr,
 
 			width:  bm.iconWidth,
